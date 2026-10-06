@@ -21,6 +21,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useLanguage } from "@/contexts/language-context";
 
 type SessionDetail = {
     id: string;
@@ -40,6 +41,7 @@ export default function SessionDetailPage() {
     const params = useParams();
     const router = useRouter();
     const sessionId = params.sessionId as string;
+    const { t } = useLanguage();
 
     const [session, setSession] = useState<SessionDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -201,7 +203,7 @@ export default function SessionDetailPage() {
         return `${d}d ${h}h ${m}m ${s}s`;
     };
 
-    if (loading) return <div className="p-8">Loading...</div>;
+    if (loading) return <div className="p-8">{t("common.loading")}</div>;
     if (!session) return <div className="p-8">Session not found</div>;
 
     return (
@@ -209,7 +211,7 @@ export default function SessionDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
                 <Button variant="ghost" asChild className="self-start">
                     <Link href="/dashboard/sessions">
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Sessions
+                        <ArrowLeft className="mr-2 h-4 w-4" /> {t("sessions.backToSessions")}
                     </Link>
                 </Button>
                 <h1 className="text-xl sm:text-2xl font-bold truncate">
@@ -222,7 +224,7 @@ export default function SessionDetailPage() {
                 <Card className="md:col-span-2">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
-                            Session Status
+                            {t("sessions.sessionStatus")}
                             <div className={`px-3 py-1 rounded-full text-xs font-bold ${session.status === 'CONNECTED' ? 'bg-green-100 text-green-700' :
                                 session.status === 'STOPPED' ? 'bg-red-100 text-red-700' :
                                     'bg-yellow-100 text-yellow-700'
@@ -230,16 +232,16 @@ export default function SessionDetailPage() {
                                 {session.status}
                             </div>
                         </CardTitle>
-                        <CardDescription>Real-time connection status and uptime.</CardDescription>
+                        <CardDescription>{t("sessions.sessionStatusDesc")}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-gray-50 rounded-lg">
-                                <span className="text-sm text-gray-500 block">Uptime</span>
+                                <span className="text-sm text-gray-500 block">{t("sessions.uptime")}</span>
                                 <span className="text-xl font-mono font-medium">{formatUptime(uptime)}</span>
                             </div>
                             <div className="p-4 bg-gray-50 rounded-lg">
-                                <span className="text-sm text-gray-500 block">Connected As</span>
+                                <span className="text-sm text-gray-500 block">{t("sessions.connectedAs")}</span>
                                 <span className="text-lg font-medium truncate">{session.me?.name || session.me?.id || "-"}</span>
                             </div>
                         </div>
@@ -329,8 +331,8 @@ export default function SessionDetailPage() {
                 {/* Actions Panel */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Controls</CardTitle>
-                        <CardDescription>Manage the active session.</CardDescription>
+                        <CardTitle>{t("sessions.controls")}</CardTitle>
+                        <CardDescription>{t("sessions.controlsDesc")}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <Button
@@ -339,7 +341,7 @@ export default function SessionDetailPage() {
                             onClick={() => performAction('start')}
                             disabled={session.status === 'CONNECTED' || session.status === 'SCAN_QR'}
                         >
-                            <Play className="mr-2 h-4 w-4" /> Start Session
+                            <Play className="mr-2 h-4 w-4" /> {t("sessions.startSession")}
                         </Button>
 
                         <Button
@@ -348,7 +350,7 @@ export default function SessionDetailPage() {
                             onClick={() => performAction('restart')}
                             disabled={!session.hasInstance && session.status !== 'CONNECTED'}
                         >
-                            <RotateCcw className="mr-2 h-4 w-4" /> Restart Session
+                            <RotateCcw className="mr-2 h-4 w-4" /> {t("sessions.restartSession")}
                         </Button>
 
                         <Button
@@ -357,7 +359,7 @@ export default function SessionDetailPage() {
                             onClick={() => performAction('stop')}
                             disabled={session.status === 'STOPPED'}
                         >
-                            <Square className="mr-2 h-4 w-4" /> Stop Session
+                            <Square className="mr-2 h-4 w-4" /> {t("sessions.stopSession")}
                         </Button>
 
                         <div className="border-t my-4 pt-4 space-y-3">
@@ -367,7 +369,7 @@ export default function SessionDetailPage() {
                                 onClick={() => performAction('logout')}
                                 disabled={session.status !== 'CONNECTED'}
                             >
-                                <LogOut className="mr-2 h-4 w-4" /> Logout
+                                <LogOut className="mr-2 h-4 w-4" /> {t("sessions.logout")}
                             </Button>
 
                             <AlertDialog>
@@ -376,21 +378,20 @@ export default function SessionDetailPage() {
                                         variant="destructive"
                                         className="w-full justify-start"
                                     >
-                                        <Trash2 className="mr-2 h-4 w-4" /> Delete Session
+                                        <Trash2 className="mr-2 h-4 w-4" /> {t("sessions.deleteSession")}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogTitle>{t("sessions.deleteConfirmTitle")}</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete the session
-                                            and remove your connection data from the server.
+                                            {t("sessions.deleteConfirmDesc")}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                                         <AlertDialogAction onClick={deleteSession} className="bg-red-600 hover:bg-red-700">
-                                            Delete
+                                            {t("common.delete")}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>

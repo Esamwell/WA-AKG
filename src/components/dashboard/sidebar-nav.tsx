@@ -18,7 +18,6 @@ import {
     Bell,
     FileText,
     Code,
-    Send,
     UserCheck,
     Megaphone,
     HardDrive,
@@ -26,10 +25,10 @@ import {
     UserCircle,
     Tag,
     MessageCircleReply,
-    Contact,
     UserPlus
 } from "lucide-react";
 import { useSidebar } from "./sidebar-context";
+import { useLanguage } from "@/contexts/language-context";
 import {
     Tooltip,
     TooltipContent,
@@ -37,70 +36,77 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface NavGroup {
-    label: string;
-    items: NavItem[];
-}
-
 interface NavItem {
     href: string;
-    label: string;
+    labelKey: string;
     icon: React.ElementType;
     external?: boolean;
     superadminOnly?: boolean;
     allowedRoles?: string[];
 }
 
+interface NavGroup {
+    id: string;
+    labelKey: string;
+    items: NavItem[];
+}
+
 const navGroups: NavGroup[] = [
     {
-        label: "Main",
+        id: "main",
+        labelKey: "nav.main",
         items: [
-            { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-            { href: "/dashboard/sessions", label: "Sessions / QR", icon: QrCode },
+            { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+            { href: "/dashboard/sessions", labelKey: "nav.sessions", icon: QrCode },
         ],
     },
     {
-        label: "Messaging",
+        id: "messaging",
+        labelKey: "nav.messaging",
         items: [
-            { href: "/dashboard/chat", label: "Chat", icon: MessageSquare },
-            { href: "/dashboard/broadcast", label: "Broadcast", icon: Megaphone },
-            { href: "/dashboard/sticker", label: "Sticker Maker", icon: ImageIcon },
+            { href: "/dashboard/chat", labelKey: "nav.chat", icon: MessageSquare },
+            { href: "/dashboard/broadcast", labelKey: "nav.broadcast", icon: Megaphone },
+            { href: "/dashboard/sticker", labelKey: "nav.sticker", icon: ImageIcon },
         ],
     },
     {
-        label: "Contacts",
+        id: "contacts",
+        labelKey: "nav.contacts",
         items: [
-            { href: "/dashboard/contacts", label: "Contacts", icon: UserCheck },
-            { href: "/dashboard/groups", label: "Groups", icon: Users },
-            { href: "/dashboard/labels", label: "Labels", icon: Tag },
+            { href: "/dashboard/contacts", labelKey: "nav.contactsList", icon: UserCheck },
+            { href: "/dashboard/groups", labelKey: "nav.groups", icon: Users },
+            { href: "/dashboard/labels", labelKey: "nav.labels", icon: Tag },
         ],
     },
     {
-        label: "Automation",
+        id: "automation",
+        labelKey: "nav.automation",
         items: [
-            { href: "/dashboard/bot-settings", label: "Bot Settings", icon: Bot },
-            { href: "/dashboard/autoreply", label: "Auto Reply", icon: MessageCircleReply },
-            { href: "/dashboard/profile", label: "Bot Profile", icon: UserCircle },
-            { href: "/dashboard/scheduler", label: "Scheduler", icon: CalendarClock },
-            { href: "/dashboard/webhooks", label: "Webhooks & API", icon: Webhook },
+            { href: "/dashboard/bot-settings", labelKey: "nav.botSettings", icon: Bot },
+            { href: "/dashboard/autoreply", labelKey: "nav.autoReply", icon: MessageCircleReply },
+            { href: "/dashboard/profile", labelKey: "nav.botProfile", icon: UserCircle },
+            { href: "/dashboard/scheduler", labelKey: "nav.scheduler", icon: CalendarClock },
+            { href: "/dashboard/webhooks", labelKey: "nav.webhooks", icon: Webhook },
         ],
     },
     {
-        label: "Developer",
+        id: "developer",
+        labelKey: "nav.developer",
         items: [
-            { href: "/docs", label: "API Docs", icon: FileText },
-            { href: "/swagger", label: "Swagger UI", icon: Code, external: true },
+            { href: "/docs", labelKey: "nav.apiDocs", icon: FileText },
+            { href: "/swagger", labelKey: "nav.swagger", icon: Code, external: true },
         ],
     },
     {
-        label: "Administration",
+        id: "administration",
+        labelKey: "nav.administration",
         items: [
-            { href: "/dashboard/media", label: "Media Manager", icon: HardDrive },
-            { href: "/dashboard/sessions/access", label: "Session Access", icon: UserPlus },
-            { href: "/dashboard/users", label: "Users", icon: Users, superadminOnly: true },
-            { href: "/dashboard/settings", label: "Settings", icon: Settings },
-            { href: "/dashboard/system-monitor", label: "System Monitor", icon: Activity, superadminOnly: true },
-            { href: "/dashboard/notifications", label: "Notifications", icon: Bell, superadminOnly: true },
+            { href: "/dashboard/media", labelKey: "nav.media", icon: HardDrive },
+            { href: "/dashboard/sessions/access", labelKey: "nav.sessionAccess", icon: UserPlus },
+            { href: "/dashboard/users", labelKey: "nav.users", icon: Users, superadminOnly: true },
+            { href: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+            { href: "/dashboard/system-monitor", labelKey: "nav.systemMonitor", icon: Activity, superadminOnly: true },
+            { href: "/dashboard/notifications", labelKey: "nav.notifications", icon: Bell, superadminOnly: true },
         ],
     },
 ];
@@ -109,14 +115,15 @@ export function SidebarNav() {
     const pathname = usePathname();
     const { data: session } = useSession();
     const { isCollapsed, toggleCollapse } = useSidebar();
+    const { t } = useLanguage();
     // @ts-ignore
     const userRole = session?.user?.role;
 
     // Track collapsed groups — all expanded by default
     const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
-    const toggleGroup = (label: string) => {
-        setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
+    const toggleGroup = (id: string) => {
+        setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
     const isActive = (href: string) => {
@@ -135,16 +142,18 @@ export function SidebarNav() {
                     });
                     if (visibleItems.length === 0) return null;
 
-                    const isGroupCollapsed = collapsedGroups[group.label] ?? false;
+                    const isGroupCollapsed = collapsedGroups[group.id] ?? false;
+                    const groupLabel = t(group.labelKey);
 
                     // "Main" group doesn't show a collapsible header
-                    if (group.label === "Main") {
+                    if (group.id === "main") {
                         return (
-                            <div key={group.label} className="mb-1">
+                            <div key={group.id} className="mb-1">
                                 {visibleItems.map((item) => (
                                     <NavLink
                                         key={item.href}
                                         item={item}
+                                        label={t(item.labelKey)}
                                         active={isActive(item.href)}
                                         isCollapsed={isCollapsed}
                                     />
@@ -154,14 +163,14 @@ export function SidebarNav() {
                     }
 
                     return (
-                        <div key={group.label} className="mb-1">
+                        <div key={group.id} className="mb-1">
                             {/* Group header — hidden when sidebar collapsed */}
                             {!isCollapsed && (
                                 <button
-                                    onClick={() => toggleGroup(group.label)}
+                                    onClick={() => toggleGroup(group.id)}
                                     className="flex items-center justify-between w-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 hover:text-foreground/80 transition-colors group"
                                 >
-                                    {group.label}
+                                    {groupLabel}
                                     <ChevronDown
                                         size={12}
                                         className={`transition-transform duration-200 ${isGroupCollapsed ? "-rotate-90" : ""}`}
@@ -180,6 +189,7 @@ export function SidebarNav() {
                                         <NavLink
                                             key={item.href}
                                             item={item}
+                                            label={t(item.labelKey)}
                                             active={isActive(item.href)}
                                             isCollapsed={isCollapsed}
                                         />
@@ -202,7 +212,7 @@ export function SidebarNav() {
                     ) : (
                         <>
                             <PanelLeftClose size={16} />
-                            <span>Collapse</span>
+                            <span>{t("nav.collapse")}</span>
                         </>
                     )}
                 </button>
@@ -211,7 +221,17 @@ export function SidebarNav() {
     );
 }
 
-function NavLink({ item, active, isCollapsed }: { item: NavItem; active: boolean; isCollapsed: boolean }) {
+function NavLink({
+    item,
+    label,
+    active,
+    isCollapsed,
+}: {
+    item: NavItem;
+    label: string;
+    active: boolean;
+    isCollapsed: boolean;
+}) {
     const Icon = item.icon;
 
     const linkContent = (
@@ -235,7 +255,7 @@ function NavLink({ item, active, isCollapsed }: { item: NavItem; active: boolean
                 size={isCollapsed ? 20 : 17}
                 className={`flex-shrink-0 transition-colors duration-200 ${active ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`}
             />
-            {!isCollapsed && <span className="truncate">{item.label}</span>}
+            {!isCollapsed && <span className="truncate">{label}</span>}
         </Link>
     );
 
@@ -246,7 +266,7 @@ function NavLink({ item, active, isCollapsed }: { item: NavItem; active: boolean
                     {linkContent}
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>
-                    <p className="text-xs font-medium">{item.label}</p>
+                    <p className="text-xs font-medium">{label}</p>
                 </TooltipContent>
             </Tooltip>
         );

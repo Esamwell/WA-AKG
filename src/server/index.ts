@@ -11,6 +11,11 @@ import { waManager } from "../modules/whatsapp/manager";
 import { logger } from "../lib/logger";
 import pkg from "../../package.json";
 
+try {
+  const sharp = require("sharp");
+  sharp.cache(false);
+} catch {}
+
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "localhost";
 const port = parseInt(process.env.PORT || "3030", 10);

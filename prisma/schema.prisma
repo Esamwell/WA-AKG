@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -296,6 +296,7 @@ model SystemConfig {
   faviconUrl         String?
   timezone           String   @default("Asia/Jakarta")
   enableRegistration Boolean  @default(true)
+  language           String   @default("pt-BR")
   
   updatedAt          DateTime @updatedAt
 }

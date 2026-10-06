@@ -23,25 +23,43 @@ export class ChatService {
         if (before) qParams.push(new Date(before));
         qParams.push(limit);
 
+        const isPostgres = process.env.DATABASE_URL?.startsWith('postgres');
+        const sql = isPostgres
+            ? `
+                SELECT m1."remoteJid", m1."content", m1."timestamp", m1."type"
+                FROM "Message" m1
+                INNER JOIN (
+                    SELECT "remoteJid", MAX("timestamp") as max_ts
+                    FROM "Message"
+                    WHERE "sessionId" = $1
+                    GROUP BY "remoteJid"
+                ) m2 ON m1."remoteJid" = m2."remoteJid" AND m1."timestamp" = m2.max_ts
+                WHERE m1."sessionId" = $2
+                ${before ? 'AND m1."timestamp" < $3' : ''}
+                ORDER BY m1."timestamp" DESC
+                LIMIT ${before ? '$4' : '$3'}
+            `
+            : `
+                SELECT m1.remoteJid, m1.content, m1.timestamp, m1.type
+                FROM \`Message\` m1
+                INNER JOIN (
+                    SELECT remoteJid, MAX(timestamp) as max_ts
+                    FROM \`Message\`
+                    WHERE sessionId = ?
+                    GROUP BY remoteJid
+                ) m2 ON m1.remoteJid = m2.remoteJid AND m1.timestamp = m2.max_ts
+                WHERE m1.sessionId = ?
+                ${before ? 'AND m1.timestamp < ?' : ''}
+                ORDER BY m1.timestamp DESC
+                LIMIT ?
+            `;
+
         const rawLastMessages = await prisma.$queryRawUnsafe<Array<{
             remoteJid: string;
             content: string | null;
             timestamp: Date;
             type: string;
-        }>>(`
-            SELECT m1.remoteJid, m1.content, m1.timestamp, m1.type
-            FROM \`Message\` m1
-            INNER JOIN (
-                SELECT remoteJid, MAX(timestamp) as max_ts
-                FROM \`Message\`
-                WHERE sessionId = ?
-                GROUP BY remoteJid
-            ) m2 ON m1.remoteJid = m2.remoteJid AND m1.timestamp = m2.max_ts
-            WHERE m1.sessionId = ?
-            ${before ? 'AND m1.timestamp < ?' : ''}
-            ORDER BY m1.timestamp DESC
-            LIMIT ?
-        `, ...qParams);
+        }>>(sql, ...qParams);
 
         // Fast return if no messages
         if (rawLastMessages.length === 0) return [];

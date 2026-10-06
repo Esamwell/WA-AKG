@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { getChatsStatus } from "@/app/dashboard/chat/actions";
 import { useSocket } from "./socket-context";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/language-context";
 
 interface ChatContact {
     jid: string;
@@ -258,6 +259,7 @@ function SkeletonRow() {
 
 // ─── Main ──────────────────────────
 export function ChatList({ sessionId, onSelectChat, selectedJid }: ChatListProps) {
+    const { t } = useLanguage();
     const [chats, setChats] = useState<ChatContact[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchInput, setSearchInput] = useState("");
@@ -418,7 +420,7 @@ export function ChatList({ sessionId, onSelectChat, selectedJid }: ChatListProps
             <div className="shrink-0 px-3 pt-3 pb-2 space-y-2 border-b border-border/10">
                 <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-base text-foreground">
-                        Chats
+                        {t("chat.title")}
                         {chats.length > 0 && <span className="ml-1.5 text-xs font-normal text-muted-foreground">({chats.length})</span>}
                     </h3>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
@@ -429,7 +431,7 @@ export function ChatList({ sessionId, onSelectChat, selectedJid }: ChatListProps
 
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                    <Input placeholder="Search chats..." value={searchInput}
+                    <Input placeholder={t("chat.searchPlaceholder")} value={searchInput}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         className="h-8 pl-8 text-sm bg-muted/50 border-0 rounded-lg focus-visible:ring-1" />
                 </div>

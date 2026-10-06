@@ -12,6 +12,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { io, Socket } from "socket.io-client";
+import { LanguageSwitcher } from "@/components/dashboard/language-switcher";
+import { useLanguage } from "@/contexts/language-context";
 
 interface NavbarProps {
     appName?: string;
@@ -30,6 +32,7 @@ interface Notification {
 export function Navbar({ appName }: NavbarProps) {
     const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useLanguage();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
@@ -76,7 +79,7 @@ export function Navbar({ appName }: NavbarProps) {
                 toast.info(notification.title, {
                     description: notification.message,
                     action: notification.href ? {
-                        label: "View",
+                        label: t("common.view"),
                         onClick: () => router.push(notification.href!)
                     } : undefined,
                 });
@@ -88,7 +91,7 @@ export function Navbar({ appName }: NavbarProps) {
                 socketInstance.disconnect();
             };
         }
-    }, [session?.user?.id]);
+    }, [session?.user?.id, t]);
 
     const markAsRead = async (id?: string) => {
         try {
@@ -123,11 +126,11 @@ export function Navbar({ appName }: NavbarProps) {
                     const notification = notifications.find(n => n.id === id);
                     return notification && !notification.read ? Math.max(0, prev - 1) : prev;
                 });
-                toast.success("Notification deleted");
+                toast.success(t("notifications.deleted"));
             }
         } catch (e) {
             console.error("Failed to delete notification");
-            toast.error("Failed to delete notification");
+            toast.error(t("notifications.deleteFailed"));
         }
     };
 
@@ -143,9 +146,10 @@ export function Navbar({ appName }: NavbarProps) {
                 <MobileNav appName={appName} />
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <span className="hidden sm:inline"><RealtimeClock /></span>
                 <SessionSelector />
+                <LanguageSwitcher />
                 <div className="h-6 w-px bg-border/50 hidden sm:block" />
 
                 <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -160,18 +164,18 @@ export function Navbar({ appName }: NavbarProps) {
                     <PopoverContent className="w-80 p-0 rounded-2xl border border-border/50 shadow-2xl glass-panel" align="end">
                         <div className="p-4 border-b border-border/50 flex justify-between items-center bg-background/50">
                             <div>
-                                <h4 className="font-semibold leading-none text-foreground">Notifications</h4>
+                                <h4 className="font-semibold leading-none text-foreground">{t("notifications.title")}</h4>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {unreadCount > 0 ? `You have ${unreadCount} unread updates.` : "No new notifications."}
+                                    {unreadCount > 0 ? t("notifications.unreadUpdates", { count: unreadCount }) : t("notifications.noNew")}
                                 </p>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => { router.push("/dashboard/inbox"); setIsOpen(false); }}>
-                                    See all
+                                    {t("notifications.seeAll")}
                                 </Button>
                                 {unreadCount > 0 && (
                                     <Button variant="ghost" size="sm" onClick={() => markAsRead()} className="h-auto py-1 px-2 text-xs">
-                                        Mark all read
+                                        {t("notifications.markAllRead")}
                                     </Button>
                                 )}
                             </div>
@@ -182,8 +186,8 @@ export function Navbar({ appName }: NavbarProps) {
                                     <div className="bg-slate-100 p-3 rounded-full mb-3">
                                         <Inbox className="h-6 w-6 text-slate-400" />
                                     </div>
-                                    <p className="text-sm font-medium">No new notifications</p>
-                                    <p className="text-xs text-muted-foreground max-w-[180px]">We'll notify you when something important arrives.</p>
+                                    <p className="text-sm font-medium">{t("notifications.empty")}</p>
+                                    <p className="text-xs text-muted-foreground max-w-[180px]">{t("notifications.emptyDesc")}</p>
                                 </div>
                             ) : (
                                 <div className="divide-y">

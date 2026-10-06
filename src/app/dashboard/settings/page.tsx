@@ -6,21 +6,33 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Save, AlertCircle } from "lucide-react";
+import { RefreshCw, Save, AlertCircle, Languages } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/language-context";
+import { Language } from "@/locales";
 
 export default function SettingsPage() {
     const { data: authSession } = useSession();
+    const { t, setLanguage: setClientLanguage } = useLanguage();
     const isSuperAdmin = (authSession?.user as any)?.role === "SUPERADMIN";
 
-    const [systemConfig, setSystemConfig] = useState({
+    const [systemConfig, setSystemConfig] = useState<{
+        appName: string;
+        logoUrl: string;
+        faviconUrl: string;
+        timezone: string;
+        enableRegistration: boolean;
+        language: Language;
+    }>({
         appName: "WA-AKG",
         logoUrl: "",
-        timezone: "Asia/Jakarta",
-        enableRegistration: true
+        faviconUrl: "/favicon.ico",
+        timezone: "America/Sao_Paulo",
+        enableRegistration: true,
+        language: "pt-BR"
     });
     const [systemLoading, setSystemLoading] = useState(false);
-    const [timezones, setTimezones] = useState<string[]>(["UTC", "Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"]);
+    const [timezones, setTimezones] = useState<string[]>(["UTC", "America/Sao_Paulo", "America/New_York", "Asia/Jakarta"]);
 
     useEffect(() => {
         try {
@@ -46,15 +58,20 @@ export default function SettingsPage() {
                     setSystemConfig({
                         appName: data.appName || "WA-AKG",
                         logoUrl: data.logoUrl || "",
-                        // @ts-ignore
                         faviconUrl: data.faviconUrl || "/favicon.ico",
-                        timezone: data.timezone || "Asia/Jakarta",
-                        enableRegistration: data.enableRegistration !== undefined ? data.enableRegistration : true
+                        timezone: data.timezone || "America/Sao_Paulo",
+                        enableRegistration: data.enableRegistration !== undefined ? data.enableRegistration : true,
+                        language: (data.language as Language) || "pt-BR"
                     });
                 }
             })
             .catch(() => { });
     }, []);
+
+    const handleLanguageChange = (newLang: Language) => {
+        setSystemConfig(prev => ({ ...prev, language: newLang }));
+        setClientLanguage(newLang);
+    };
 
     const handleSaveSystem = async () => {
         setSystemLoading(true);
@@ -66,13 +83,14 @@ export default function SettingsPage() {
             });
 
             if (res.ok) {
-                toast.success("System settings updated. Refresh to see changes.");
+                setClientLanguage(systemConfig.language);
+                toast.success(t("settings.updateSuccess"));
             } else {
-                toast.error("Failed to update system settings");
+                toast.error(t("settings.updateError"));
             }
         } catch (e) {
             console.error(e);
-            toast.error("Error saving system settings");
+            toast.error(t("settings.updateError"));
         } finally {
             setSystemLoading(false);
         }
@@ -83,8 +101,8 @@ export default function SettingsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl sm:text-3xl font-bold tracking-tight">Settings</h2>
-                <p className="text-muted-foreground text-sm mt-1">Global system configuration. Only SuperAdmins can make changes.</p>
+                <h2 className="text-xl sm:text-3xl font-bold tracking-tight">{t("settings.title")}</h2>
+                <p className="text-muted-foreground text-sm mt-1">{t("settings.subtitle")}</p>
             </div>
 
             {!isSuperAdmin && (
@@ -93,9 +111,9 @@ export default function SettingsPage() {
                         <div className="flex items-start gap-3">
                             <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
                             <div>
-                                <p className="text-sm font-medium text-yellow-900">View Only Mode</p>
+                                <p className="text-sm font-medium text-yellow-900">{t("settings.viewOnlyTitle")}</p>
                                 <p className="text-xs text-yellow-700 mt-1">
-                                    Only Superadmins can modify system settings. You can view current settings but cannot make changes.
+                                    {t("settings.viewOnlyDesc")}
                                 </p>
                             </div>
                         </div>
@@ -106,13 +124,13 @@ export default function SettingsPage() {
             {/* System Configuration (Global) */}
             <Card className="border-primary/20 bg-primary/5">
                 <CardHeader>
-                    <CardTitle className="text-xl">App Configuration</CardTitle>
-                    <CardDescription>Global settings for the application branding and access control.</CardDescription>
+                    <CardTitle className="text-xl">{t("settings.appConfigTitle")}</CardTitle>
+                    <CardDescription>{t("settings.appConfigDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label>Application Name</Label>
+                            <Label>{t("settings.appName")}</Label>
                             <input
                                 className={inputClass}
                                 placeholder="WA-AKG"
@@ -120,11 +138,31 @@ export default function SettingsPage() {
                                 onChange={(e) => setSystemConfig(prev => ({ ...prev, appName: e.target.value }))}
                                 disabled={!isSuperAdmin}
                             />
-                            <p className="text-xs text-muted-foreground">Changes the name in the sidebar and browser title.</p>
+                            <p className="text-xs text-muted-foreground">{t("settings.appNameHelp")}</p>
                         </div>
 
+                        {/* Language Selection */}
                         <div className="grid gap-2">
-                            <Label>Timezone</Label>
+                            <Label className="flex items-center gap-1.5">
+                                <Languages className="h-4 w-4 text-primary" />
+                                {t("settings.languageLabel")}
+                            </Label>
+                            <select
+                                className={inputClass}
+                                value={systemConfig.language}
+                                onChange={(e) => handleLanguageChange(e.target.value as Language)}
+                                disabled={!isSuperAdmin}
+                            >
+                                <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+                                <option value="en-US">🇺🇸 English (United States)</option>
+                            </select>
+                            <p className="text-xs text-muted-foreground">{t("settings.languageHelp")}</p>
+                        </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label>{t("settings.timezone")}</Label>
                             <select
                                 className={inputClass}
                                 value={systemConfig.timezone}
@@ -137,13 +175,11 @@ export default function SettingsPage() {
                                     </option>
                                 ))}
                             </select>
-                            <p className="text-xs text-muted-foreground">Scheduler will use this timezone.</p>
+                            <p className="text-xs text-muted-foreground">{t("settings.timezoneHelp")}</p>
                         </div>
-                    </div>
 
-                    <div className="grid sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label>Logo URL</Label>
+                            <Label>{t("settings.logoUrl")}</Label>
                             <input
                                 className={inputClass}
                                 placeholder="https://example.com/logo.png"
@@ -151,25 +187,30 @@ export default function SettingsPage() {
                                 onChange={(e) => setSystemConfig(prev => ({ ...prev, logoUrl: e.target.value }))}
                                 disabled={!isSuperAdmin}
                             />
-                            <p className="text-xs text-muted-foreground">URL for the main dashboard logo.</p>
+                            <p className="text-xs text-muted-foreground">{t("settings.logoUrlHelp")}</p>
                         </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label>Favicon URL</Label>
+                            <Label>{t("settings.faviconUrl")}</Label>
                             <input
                                 className={inputClass}
                                 placeholder="/favicon.ico"
-                                value={(systemConfig as any).faviconUrl || ""}
+                                value={systemConfig.faviconUrl || ""}
                                 onChange={(e) => setSystemConfig(prev => ({ ...prev, faviconUrl: e.target.value }))}
                                 disabled={!isSuperAdmin}
                             />
-                            <p className="text-xs text-muted-foreground">URL for the browser tab icon.</p>
+                            <p className="text-xs text-muted-foreground">{t("settings.faviconUrlHelp")}</p>
                         </div>
                     </div>
 
                     <div className="flex items-center justify-between space-x-2 pt-2 border-t border-border/50">
                         <Label htmlFor="enable-registration" className="flex flex-col space-y-1">
-                            <span>Enable User Registration</span>
-                            <span className="font-normal text-xs text-muted-foreground">Allow new users to sign up for accounts. Turn off to keep the platform private.</span>
+                            <span>{t("settings.enableRegistration")}</span>
+                            <span className="font-normal text-xs text-muted-foreground">
+                                {t("settings.enableRegistrationHelp")}
+                            </span>
                         </Label>
                         <Switch
                             id="enable-registration"
@@ -182,7 +223,7 @@ export default function SettingsPage() {
                     <div className="pt-2">
                         <Button onClick={handleSaveSystem} disabled={systemLoading || !isSuperAdmin}>
                             {systemLoading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            Save Configuration
+                            {systemLoading ? t("settings.savingConfig") : t("settings.saveConfig")}
                         </Button>
                     </div>
                 </CardContent>
@@ -191,8 +232,8 @@ export default function SettingsPage() {
             {/* System Updates */}
             <Card>
                 <CardHeader>
-                    <CardTitle>System Updates</CardTitle>
-                    <CardDescription>Check for the latest version from GitHub.</CardDescription>
+                    <CardTitle>{t("settings.systemUpdatesTitle")}</CardTitle>
+                    <CardDescription>{t("settings.systemUpdatesDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button
@@ -217,7 +258,7 @@ export default function SettingsPage() {
                         disabled={systemLoading}
                     >
                         <RefreshCw className={`mr-2 h-4 w-4 ${systemLoading ? 'animate-spin' : ''}`} />
-                        Check for Updates
+                        {systemLoading ? t("settings.checkingUpdates") : t("settings.checkUpdates")}
                     </Button>
                 </CardContent>
             </Card>

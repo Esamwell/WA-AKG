@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 
+import { useLanguage } from "@/contexts/language-context";
+
 interface SidebarShellProps {
     appName: string;
     userName?: string | null;
@@ -15,6 +17,7 @@ interface SidebarShellProps {
 
 export function SidebarShell({ appName, userName, userEmail, version }: SidebarShellProps) {
     const { isCollapsed } = useSidebar();
+    const { t } = useLanguage();
 
     return (
         <aside
@@ -39,7 +42,7 @@ export function SidebarShell({ appName, userName, userEmail, version }: SidebarS
                         <h1 className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
                             {appName}
                         </h1>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">WhatsApp Gateway</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{t("nav.gatewaySubtitle")}</p>
                     </>
                 )}
             </div>
@@ -84,7 +87,7 @@ export function SidebarShell({ appName, userName, userEmail, version }: SidebarS
                             className="w-full flex items-center justify-center gap-2 text-xs h-8 rounded-lg border-border/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
                             onClick={() => signOut({ callbackUrl: "/auth/login" })}
                         >
-                            <LogOut size={14} /> Sign Out
+                            <LogOut size={14} /> {t("nav.signOut")}
                         </Button>
                         <p className="text-[9px] text-muted-foreground/50 text-center mt-2 font-mono">v{version}</p>
                     </>

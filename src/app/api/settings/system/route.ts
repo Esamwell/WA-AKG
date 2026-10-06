@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
             where: { id: "default" }
         });
 
-        return NextResponse.json({ status: true, message: "System config fetched", data: config || { appName: "WA-AKG", faviconUrl: "/favicon.ico" } });
+        return NextResponse.json({ status: true, message: "System config fetched", data: config || { appName: "WA-AKG", faviconUrl: "/favicon.ico", language: "pt-BR" } });
     } catch (error) {
         return NextResponse.json({ status: false, message: "Failed to fetch settings", error: "Failed to fetch settings" }, { status: 500 });
     }
@@ -29,13 +29,13 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { appName, logoUrl, faviconUrl, timezone, enableRegistration } = body;
+        const { appName, logoUrl, faviconUrl, timezone, enableRegistration, language } = body;
 
         // @ts-ignore
         const config = await prisma.systemConfig.upsert({
             where: { id: "default" },
-            update: { appName, logoUrl, faviconUrl, timezone, enableRegistration: enableRegistration ?? true },
-            create: { id: "default", appName, logoUrl: logoUrl || "", faviconUrl: faviconUrl || "/favicon.ico", timezone: timezone || "Asia/Jakarta", enableRegistration: enableRegistration ?? true }
+            update: { appName, logoUrl, faviconUrl, timezone, enableRegistration: enableRegistration ?? true, language: language || "pt-BR" },
+            create: { id: "default", appName, logoUrl: logoUrl || "", faviconUrl: faviconUrl || "/favicon.ico", timezone: timezone || "Asia/Jakarta", enableRegistration: enableRegistration ?? true, language: language || "pt-BR" }
         });
 
         return NextResponse.json({ status: true, message: "System settings updated", data: config });

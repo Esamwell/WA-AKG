@@ -17,11 +17,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Bot, ArrowRight, Loader2 } from "lucide-react";
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/language-context';
+import { LanguageSwitcher } from '@/components/dashboard/language-switcher';
 
 const formSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    name: z.string().min(2),
+    email: z.string().email(),
+    password: z.string().min(6),
     confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -30,6 +32,7 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -62,7 +65,7 @@ export default function RegisterPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to register");
+                throw new Error(errorData.error || t("auth.unexpectedError"));
             }
 
             setSuccess(true);
@@ -71,7 +74,7 @@ export default function RegisterPage() {
             }, 2000);
 
         } catch (err: any) {
-            setError(err.message || "An unexpected error occurred");
+            setError(err.message || t("auth.unexpectedError"));
         } finally {
             setLoading(false);
         }
@@ -94,6 +97,11 @@ export default function RegisterPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen relative overflow-hidden bg-background py-12">
+            {/* Top Language Switcher */}
+            <div className="absolute top-4 right-4 z-20">
+                <LanguageSwitcher />
+            </div>
+
             {/* Background Orbs */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/4 w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-[120px]" />
@@ -105,8 +113,8 @@ export default function RegisterPage() {
                     <div className="relative flex h-16 w-16 mb-4 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-primary text-white shadow-lg shadow-primary/30">
                         <Bot className="h-8 w-8" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Create Account</h1>
-                    <p className="text-muted-foreground mt-2">Join WA-AKG today</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("auth.registerTitle")}</h1>
+                    <p className="text-muted-foreground mt-2">{t("auth.registerSubtitle")}</p>
                 </div>
 
                 <div className="glass-panel rounded-3xl p-8 shadow-2xl shadow-black/5 dark:shadow-black/40">
@@ -123,10 +131,10 @@ export default function RegisterPage() {
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-foreground/80">Full Name</FormLabel>
+                                        <FormLabel className="text-foreground/80">{t("auth.name")}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="John Doe"
+                                                placeholder={t("auth.namePlaceholder")}
                                                 className="h-12 px-4 rounded-xl bg-background/50 border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-all font-medium"
                                                 {...field}
                                             />
@@ -140,10 +148,10 @@ export default function RegisterPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-foreground/80">Email</FormLabel>
+                                        <FormLabel className="text-foreground/80">{t("auth.email")}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="name@example.com"
+                                                placeholder={t("auth.emailPlaceholder")}
                                                 className="h-12 px-4 rounded-xl bg-background/50 border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-all font-medium"
                                                 {...field}
                                             />
@@ -157,11 +165,11 @@ export default function RegisterPage() {
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-foreground/80">Password</FormLabel>
+                                        <FormLabel className="text-foreground/80">{t("auth.password")}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="password"
-                                                placeholder="••••••••"
+                                                placeholder={t("auth.passwordPlaceholder")}
                                                 className="h-12 px-4 rounded-xl bg-background/50 border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-all font-medium"
                                                 {...field}
                                             />
@@ -175,11 +183,11 @@ export default function RegisterPage() {
                                 name="confirmPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-foreground/80">Confirm Password</FormLabel>
+                                        <FormLabel className="text-foreground/80">{t("auth.confirmPassword")}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="password"
-                                                placeholder="••••••••"
+                                                placeholder={t("auth.passwordPlaceholder")}
                                                 className="h-12 px-4 rounded-xl bg-background/50 border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-all font-medium"
                                                 {...field}
                                             />
@@ -196,9 +204,9 @@ export default function RegisterPage() {
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Creating Account...</>
+                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("auth.creatingAccount")}</>
                                 ) : (
-                                    <>Register <ArrowRight className="ml-2 h-5 w-5" /></>
+                                    <>{t("auth.signUp")} <ArrowRight className="ml-2 h-5 w-5" /></>
                                 )}
                             </Button>
                         </form>
@@ -210,9 +218,9 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="mt-8 text-center text-sm text-muted-foreground">
-                    Already have an account?{" "}
+                    {t("auth.haveAccount")}{" "}
                     <Link href="/auth/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-                        Sign in
+                        {t("auth.signIn")}
                     </Link>
                 </div>
             </div>

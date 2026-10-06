@@ -18,10 +18,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Bot, ArrowRight, Loader2 } from "lucide-react";
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/language-context';
+import { LanguageSwitcher } from '@/components/dashboard/language-switcher';
 
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().email(),
+  password: z.string().min(1),
 });
 
 function LoginForm() {
@@ -30,6 +32,7 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,13 +53,13 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(t("auth.invalidCredentials"));
       } else {
         window.location.href = callbackUrl;
         router.refresh();
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(t("auth.unexpectedError"));
     } finally {
       setLoading(false);
     }
@@ -64,6 +67,11 @@ function LoginForm() {
 
   return (
     <div className="flex items-center justify-center min-h-screen relative overflow-hidden bg-background">
+      {/* Top Language Switcher */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher />
+      </div>
+
       {/* Background Orbs */}
       <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3 w-[30rem] h-[30rem] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none" />
@@ -73,8 +81,8 @@ function LoginForm() {
           <div className="relative flex h-16 w-16 mb-4 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-primary text-white shadow-lg shadow-primary/30">
             <Bot className="h-8 w-8" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome Back</h1>
-          <p className="text-muted-foreground mt-2">Sign in to your WA-AKG account</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("auth.welcomeBack")}</h1>
+          <p className="text-muted-foreground mt-2">{t("auth.signInSubtitle")}</p>
         </div>
 
         <div className="glass-panel rounded-3xl p-8 shadow-2xl shadow-black/5 dark:shadow-black/40">
@@ -91,10 +99,10 @@ function LoginForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Email</FormLabel>
+                    <FormLabel className="text-foreground/80">{t("auth.email")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="name@example.com"
+                        placeholder={t("auth.emailPlaceholder")}
                         className="h-12 px-4 rounded-xl bg-background/50 border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-all font-medium"
                         {...field}
                       />
@@ -108,11 +116,11 @@ function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Password</FormLabel>
+                    <FormLabel className="text-foreground/80">{t("auth.password")}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="••••••••"
+                        placeholder={t("auth.passwordPlaceholder")}
                         className="h-12 px-4 rounded-xl bg-background/50 border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-all font-medium"
                         {...field}
                       />
@@ -129,9 +137,9 @@ function LoginForm() {
                 disabled={loading}
               >
                 {loading ? (
-                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Authenticating...</>
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("auth.authenticating")}</>
                 ) : (
-                  <>Sign In <ArrowRight className="ml-2 h-5 w-5" /></>
+                  <>{t("auth.signIn")} <ArrowRight className="ml-2 h-5 w-5" /></>
                 )}
               </Button>
             </form>
@@ -139,9 +147,9 @@ function LoginForm() {
         </div>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <Link href="/auth/register" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-            Create an account
+            {t("auth.createAccount")}
           </Link>
         </div>
       </div>

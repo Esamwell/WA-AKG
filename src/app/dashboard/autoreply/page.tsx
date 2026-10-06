@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAutoReplies, createAutoReply, deleteAutoReply, updateAutoReply } from "./actions";
 import { SessionGuard } from "@/components/dashboard/session-guard";
+import { useLanguage } from "@/contexts/language-context";
 
 interface AutoReply {
     id: string;

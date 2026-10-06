@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import {
     LayoutDashboard,
@@ -30,64 +30,71 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useLanguage } from "@/contexts/language-context";
 import pkg from "../../../package.json";
 
 interface NavGroup {
-    label: string;
-    items: { href: string; label: string; icon: React.ElementType; external?: boolean; superadminOnly?: boolean }[];
+    id: string;
+    labelKey: string;
+    items: { href: string; labelKey: string; icon: React.ElementType; external?: boolean; superadminOnly?: boolean }[];
 }
 
-// Keep in sync with sidebar-nav.tsx
 const navGroups: NavGroup[] = [
     {
-        label: "Main",
+        id: "main",
+        labelKey: "nav.main",
         items: [
-            { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-            { href: "/dashboard/sessions", label: "Sessions / QR", icon: QrCode },
+            { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+            { href: "/dashboard/sessions", labelKey: "nav.sessions", icon: QrCode },
         ],
     },
     {
-        label: "Messaging",
+        id: "messaging",
+        labelKey: "nav.messaging",
         items: [
-            { href: "/dashboard/chat", label: "Chat", icon: MessageSquare },
-            { href: "/dashboard/broadcast", label: "Broadcast", icon: Megaphone },
-            { href: "/dashboard/sticker", label: "Sticker Maker", icon: ImageIcon },
+            { href: "/dashboard/chat", labelKey: "nav.chat", icon: MessageSquare },
+            { href: "/dashboard/broadcast", labelKey: "nav.broadcast", icon: Megaphone },
+            { href: "/dashboard/sticker", labelKey: "nav.sticker", icon: ImageIcon },
         ],
     },
     {
-        label: "Contacts",
+        id: "contacts",
+        labelKey: "nav.contacts",
         items: [
-            { href: "/dashboard/contacts", label: "Contacts", icon: UserCheck },
-            { href: "/dashboard/groups", label: "Groups", icon: Users },
-            { href: "/dashboard/labels", label: "Labels", icon: Tag },
+            { href: "/dashboard/contacts", labelKey: "nav.contactsList", icon: UserCheck },
+            { href: "/dashboard/groups", labelKey: "nav.groups", icon: Users },
+            { href: "/dashboard/labels", labelKey: "nav.labels", icon: Tag },
         ],
     },
     {
-        label: "Automation",
+        id: "automation",
+        labelKey: "nav.automation",
         items: [
-            { href: "/dashboard/bot-settings", label: "Bot Settings", icon: Bot },
-            { href: "/dashboard/autoreply", label: "Auto Reply", icon: MessageCircleReply },
-            { href: "/dashboard/profile", label: "Bot Profile", icon: UserCircle },
-            { href: "/dashboard/scheduler", label: "Scheduler", icon: CalendarClock },
-            { href: "/dashboard/webhooks", label: "Webhooks & API", icon: Webhook },
+            { href: "/dashboard/bot-settings", labelKey: "nav.botSettings", icon: Bot },
+            { href: "/dashboard/autoreply", labelKey: "nav.autoReply", icon: MessageCircleReply },
+            { href: "/dashboard/profile", labelKey: "nav.botProfile", icon: UserCircle },
+            { href: "/dashboard/scheduler", labelKey: "nav.scheduler", icon: CalendarClock },
+            { href: "/dashboard/webhooks", labelKey: "nav.webhooks", icon: Webhook },
         ],
     },
     {
-        label: "Developer",
+        id: "developer",
+        labelKey: "nav.developer",
         items: [
-            { href: "/docs", label: "API Docs", icon: FileText },
-            { href: "/swagger", label: "Swagger UI", icon: Code, external: true },
+            { href: "/docs", labelKey: "nav.apiDocs", icon: FileText },
+            { href: "/swagger", labelKey: "nav.swagger", icon: Code, external: true },
         ],
     },
     {
-        label: "Administration",
+        id: "administration",
+        labelKey: "nav.administration",
         items: [
-            { href: "/dashboard/media", label: "Media Manager", icon: HardDrive },
-            { href: "/dashboard/sessions/access", label: "Session Access", icon: UserPlus },
-            { href: "/dashboard/users", label: "Users", icon: Users },
-            { href: "/dashboard/settings", label: "Settings", icon: Settings },
-            { href: "/dashboard/system-monitor", label: "System Monitor", icon: Activity, superadminOnly: true },
-            { href: "/dashboard/notifications", label: "Notifications", icon: Bell, superadminOnly: true },
+            { href: "/dashboard/media", labelKey: "nav.media", icon: HardDrive },
+            { href: "/dashboard/sessions/access", labelKey: "nav.sessionAccess", icon: UserPlus },
+            { href: "/dashboard/users", labelKey: "nav.users", icon: Users },
+            { href: "/dashboard/settings", labelKey: "nav.settings", icon: Settings },
+            { href: "/dashboard/system-monitor", labelKey: "nav.systemMonitor", icon: Activity, superadminOnly: true },
+            { href: "/dashboard/notifications", labelKey: "nav.notifications", icon: Bell, superadminOnly: true },
         ],
     },
 ];
@@ -96,6 +103,7 @@ export function MobileNav({ appName = "WA-AKG" }: { appName?: string }) {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
     const { data: session } = useSession();
+    const { t } = useLanguage();
     // @ts-ignore
     const userRole = session?.user?.role;
 
@@ -114,7 +122,7 @@ export function MobileNav({ appName = "WA-AKG" }: { appName?: string }) {
             <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0 flex flex-col">
                 <SheetHeader className="px-5 py-4 text-left border-b border-slate-100">
                     <SheetTitle className="text-xl font-bold text-slate-800">{appName}</SheetTitle>
-                    <SheetDescription className="text-[11px] text-slate-400 -mt-1">WhatsApp Gateway</SheetDescription>
+                    <SheetDescription className="text-[11px] text-slate-400 -mt-1">{t("nav.gatewaySubtitle")}</SheetDescription>
                 </SheetHeader>
 
                 <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-1">
@@ -125,14 +133,14 @@ export function MobileNav({ appName = "WA-AKG" }: { appName?: string }) {
                         if (visibleItems.length === 0) return null;
 
                         return (
-                            <div key={group.label} className="mb-1">
-                                {group.label !== "Main" && (
+                            <div key={group.id} className="mb-1">
+                                {group.id !== "main" && (
                                     <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                        {group.label}
+                                        {t(group.labelKey)}
                                     </p>
                                 )}
                                 <div className="space-y-0.5">
-                                    {visibleItems.map(({ href, label, icon: Icon, external }) => (
+                                    {visibleItems.map(({ href, labelKey, icon: Icon, external }) => (
                                         <Link
                                             key={href}
                                             href={href}
@@ -155,7 +163,7 @@ export function MobileNav({ appName = "WA-AKG" }: { appName?: string }) {
                                                 size={17}
                                                 className={`flex-shrink-0 transition-colors duration-200 ${isActive(href) ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"}`}
                                             />
-                                            <span className="truncate">{label}</span>
+                                            <span className="truncate">{t(labelKey)}</span>
                                         </Link>
                                     ))}
                                 </div>
@@ -183,7 +191,7 @@ export function MobileNav({ appName = "WA-AKG" }: { appName?: string }) {
                             await signOut({ callbackUrl: "/auth/login" });
                         }}
                     >
-                        <LogOut size={14} /> Sign Out
+                        <LogOut size={14} /> {t("nav.signOut")}
                     </Button>
                     <p className="text-[10px] text-slate-300 text-center mt-2 font-mono">v{pkg.version}</p>
                 </div>

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getChatMessages, sendChatMessage, sendMediaMessage } from "@/app/dashboard/chat/actions";
 import { useSocket } from "./socket-context";
+import { useLanguage } from "@/contexts/language-context";
 
 interface Message {
     id: string;
@@ -161,6 +162,7 @@ function ContextMenu({ state, onClose, onReply, onDelete }: { state: ContextMenu
 
 // ─── Main Component ─────────────────
 export function ChatWindow({ sessionId, jid, name, onBack }: ChatWindowProps) {
+    const { t } = useLanguage();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -602,7 +604,7 @@ export function ChatWindow({ sessionId, jid, name, onBack }: ChatWindowProps) {
                         )}
                         <div className="flex items-end gap-2 p-1 rounded-2xl border border-border/30 bg-background">
                             <textarea ref={inputRef} value={input} onChange={(e) => { setInput(e.target.value); const el = e.target; el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 120) + "px"; }}
-                                onKeyDown={handleKeyDown} placeholder="Type a message..." rows={1} style={{ minHeight: "36px", maxHeight: "120px" }}
+                                onKeyDown={handleKeyDown} placeholder={t("chat.typeMessage")} rows={1} style={{ minHeight: "36px", maxHeight: "120px" }}
                                 className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none leading-normal" />
                         </div>
                     </div>
